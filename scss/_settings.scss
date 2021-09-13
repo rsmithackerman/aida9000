@@ -1,0 +1,66 @@
+// ============================================================================
+//
+//    SETTINGS
+//
+// ============================================================================
+// =============================================================================
+// Default Radius, Sizes, Spaces, floats
+// =============================================================================
+
+$default-padding: 10px;
+$dp: $default-padding;
+$breakpoint: 669px;
+$bp: $breakpoint;
+
+// =============================================================================
+// Colors
+// =============================================================================
+$white: #ffffff;
+$gray-light: #e7e8e8;
+$gray-medium: #a6abaf;
+$black: #000000;
+$blue-light: #1cb7c4;
+$blue-medium: #21587e;
+$blue-dark: #19425f;
+$green-light: #d8fd35;
+
+// =============================================================================
+// Fonts
+// =============================================================================
+
+// Font-family
+$font-primary: 'mon-regular', sans-serif;
+$base-font-size: 28px;
+$base-line-increment: 1.2;
+
+// Font size
+$font-sizes: (
+  12px,
+  // $s_thin
+  16px,
+  // $s_xtiny
+  20px,
+  // $s_tiny
+  24px,
+  // $s_small
+  28px,
+  //$base-font-size - $s_normal
+  32px,
+  // $s_medium
+  40px,
+  // $s_large
+  50px,
+  // $s_large-2
+  64px,
+  // $s_xlarge
+);
+
+$s_thin: nth($font-sizes, 1);
+$s_xtiny: nth($font-sizes, 2);
+$s_tiny: nth($font-sizes, 3);
+$s_small: nth($font-sizes, 4);
+$s_normal: nth($font-sizes, 5); // $base-font-size
+$s_medium: nth($font-sizes, 6);
+$s_large: nth($font-sizes, 7);
+$s_large-2: nth($font-sizes, 8);
+$s_xlarge: nth($font-sizes, 9);

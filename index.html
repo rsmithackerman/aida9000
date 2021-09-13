@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+  <div id="cover" class="cover">
+    <div class="cover__gradient">
+      <div class="cover__logo">
+        <img src="images/logo.svg" alt="logo" />
+      </div>
+      <div class="cover__text-anim">
+        <h1 id="loading_msg">Setting up environment...</h1>
+      </div>
+    </div>
+  </div>
+
+  <div id="cover_init" class="cover">
+    <div class="cover__gradient">
+      <div class="cover__logo">
+        <img src="images/logo.svg" alt="logo" />
+      </div>
+      <div class="cover__text">
+        <h1>
+          AIDA 9000 is an application that will evaluate your face and will give you a prediction of
+          what your salary and job role should be, based on specific parameters detected.
+        </h1>
+        <h1>
+          In order to run it properly, please enable the use of the camera.
+          <span>Your camera will only be used to make predictions.</span>
+        </h1>
+        <h1><span>NO data will be stored.</span></h1>
+      </div>
+      <a
+        id="starting_test"
+        href="javascript:;"
+        onclick="close_init_message_and_start_test()"
+        class="main__button"
+        style="align-self: center"
+        >START TEST</a
+      >
+    </div>
+  </div>
+  <head>
+    <script src="js/face-api.min.js"></script>
+    <script src="js/commons.js"></script>
+    <script src="js/faceDetectionControls.js"></script>
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="css/modal_style.css" />
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+    <!-- Import TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+    <!-- Import tfjs-vis -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EEYEP18JCD"></script>
+    <!-- <script>
+      window['ga-disable-G-EEYEP18JCD'] = true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+
+      gtag('config', 'G-EEYEP18JCD');
+    </script> -->
+  </head>
+  <body>
+    <div class="main">
+      <div class="main__gradient">
+        <div class="main__progress">
+          <div class="progress" id="loader">
+            <div class="indeterminate"></div>
+          </div>
+        </div>
+        <div class="main__logo">
+          <img src="/images/logo.svg" alt="Logotipo" />
+        </div>
+        <div class="main__video">
+          <div class="main__video__screen">
+            <video
+              onloadedmetadata="onPlay(this)"
+              id="inputVideo"
+              autoplay
+              muted
+              playsinline
+            ></video>
+            <!-- style="transform: rotateY(180deg);" para rotar video-->
+            <canvas id="overlay" />
+          </div>
+          <!-- metrics -->
+          <div id="face_metrics" class="main__metrics">
+            <div class="main__metrics__row">
+              <div class="main__metrics__col">
+                <label for="age_value" class="main__metrics__col__text">Age</label>
+                <input value="-" id="age_value" class="main__metrics__col__numbers" />
+              </div>
+              <div class="main__metrics__col">
+                <label for="gender_value" class="main__metrics__col__text">Gender</label>
+                <input
+                  value="-"
+                  id="gender_value"
+                  type="text"
+                  class="main__metrics__col__numbers"
+                />
+              </div>
+              <div class="main__metrics__col">
+                <label for="expression_value" class="main__metrics__col__text">Expression</label>
+                <input value="-" id="expression_value" class="main__metrics__col__numbers" />
+              </div>
+              <div class="main__metrics__col">
+                <label for="beauty_value" class="main__metrics__col__text">Beauty</label>
+                <input
+                  value="-"
+                  id="beauty_value"
+                  type="text"
+                  class="main__metrics__col__numbers"
+                />
+              </div>
+              <div class="main__metrics__col">
+                <label for="criminal_value" class="main__metrics__col__text">Criminal</label>
+                <input
+                  value="-"
+                  id="criminal_value"
+                  type="text"
+                  class="main__metrics__col__numbers"
+                />
+              </div>
+            </div>
+
+          </div>
+          <!-- personal_score -->
+          <div id="success_meter" class="personal-score main__score">
+            <span for="personal_score" class="main__score__text"
+              >Personal Score (from 0 to 100):</span
+            >
+            <span value="-" id="personal_score" class="main__score__text">No data yet</span>
+          </div>
+        </div>
+
+        <!-- estimated salary and job -->
+        <div id="salary_job" class="main__salary">
+          <div class="main__salary__row">
+            <div class="main__salary__col">
+              <label for="estimated_job" class="main__salary__col__text">Expected Job Role:</label>
+              <input value="-" id="estimated_job" class="main__salary__col__numbers" />
+            </div>
+            <div class="main__salary__col">
+              <label for="estimated_salary" class="main__salary__col__text"
+                >Estimated Salary:</label
+              >
+              <input
+                value="-"
+                id="estimated_salary"
+                type="text"
+                class="main__salary__col__numbers"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- check boxes -->
+        <div id="check-buttons" class="main__switches">
+          <div class="input-switch">
+            <label for="hideBoundingBoxesCheckbox" class="switch">
+              <input
+                type="checkbox"
+                id="hideBoundingBoxesCheckbox"
+                onchange="onChangeHideBoundingBoxes(event)"
+              />
+              <span>Bounding Box</span>
+            </label>
+          </div>
+          <div class="input-switch">
+            <label for="hideLandmarksCheckbox" class="switch">
+              <input
+                type="checkbox"
+                id="hideLandmarksCheckbox"
+                onchange="onChangeHideLandmarks(event)"
+              />
+              <span>Landmarks</span>
+            </label>
+          </div>
+          <a class="link-comments" href="javascript:;" onclick="open_comments()">
+            <div class="animated-bg">
+              <img src="/images/comments.svg" alt="icono comments" />
+              <svg
+                class="pulse"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+              >
+                <circle id="Oval" cx="512" cy="512" r="512"></circle>
+              </svg>
+            </div>
+            Feedback
+          </a>
+        </div>
+
+        <!-- RRSS -->
+        <div class="main__rrss">
+          <a href="javascript:;" onclick="share_whatsapp()"><img src="/images/icon-wa.svg" alt="Icono Whatsapp" /></a>
+          <a href="javascript:;" onclick="share_twitter()"><img src="/images/icon-tt.svg" alt="Icono Twiter" /></a>
+          <a href="javascript:;" onclick="share_linkedin()"><img src="/images/icon-li.svg" alt="Icono LinkedIn" /></a>
+          <a href="javascript:;" onclick="share_facebook()"><img src="/images/icon-fb.svg" alt="Icono Facebook" /></a>
+        </div>
+
+        <!-- salary button -->
+        <a id="salary_button" onclick="hide_show()" class="main__button"
+          >CLICK TO SHOW ESTIMATED SALARY AND JOB</a
+        >
+        <!-- <a onclick="send_comment_2()" class="waves-effect waves-light btn">send comment</a>-->
+
+        <div id="cover_ai_message" class="main__comments">
+          <div class="main__comments__intelligence-msg">
+            <a class="close" href="javascript:;" onclick="close_message_cover('cover_ai_message')">
+              <img src="/images/close.svg" alt="cerrar" />
+            </a>
+            <img class="logo" src="/images/logo.svg" alt="" />
+            <h1 class="main__comments__intelligence-msg__h1">
+              Artificial Intelligence without Ethics <span>is not Intelligence</span>
+            </h1>
+            <div class="line"></div>
+          </div>
+        </div>
+
+        <div id="cover_comments" class="main__comments">
+          <div class="main__comments__opinion">
+            <a class="close" href="javascript:;" onclick="close_message_cover('cover_comments')">
+              <img src="/images/close.svg" alt="cerrar" />
+            </a>
+            <p id="h5-title">Please send feedback</p>
+            <div id="text-area-div" class="opinion-area">
+              <textarea id="user-comment" name="review" rows="20" cols="50"> </textarea>
+            </div>
+
+            <a id="replay-btn" onclick="continue_playing('cover_comments')" class="replay-btn"
+              >Submit and Continue Playing</a
+            >
+          </div>
+        </div>
+
+        <div id="cover_comments_plus_final_salary" class="main__comments">
+          <div class="main__comments__final-msg">
+            <h1 id="h5-title" class="main__comments__final-msg__h1">
+              Results obtained by AIDA9000
+            </h1>
+            <div id="salary_job_definitive" class="main__comments__final-msg__block">
+              <div class="main__comments__final-msg__row">
+                <div class="main__comments__final-msg__col">
+                  <label for="estimated_job_definitive" class="main__comments__final-msg__col__text"
+                    >Assigned Job Role:</label
+                  >
+                  <input
+                    value="-"
+                    id="estimated_job_definitive"
+                    class="main__comments__final-msg__col__numbers"
+                  />
+                </div>
+                <div class="main__comments__final-msg__col">
+                  <label
+                    for="estimated_salary_definitive"
+                    class="main__comments__final-msg__col__text"
+                    >Assigned Salary:</label
+                  >
+                  <input
+                    value="-"
+                    id="estimated_salary_definitive"
+                    type="text"
+                    class="main__comments__final-msg__col__numbers"
+                  />
+                </div>
+                <div class="main__comments__final-msg__col">
+                  <label
+                    for="estimated_criminal_definitive"
+                    class="main__comments__final-msg__col__text"
+                    >Criminality:</label
+                  >
+                  <input
+                    value="-"
+                    id="estimated_criminal_definitive"
+                    type="text"
+                    class="main__comments__final-msg__col__numbers"
+                  />
+                </div>
+              </div>
+              <div class="main__comments__final-msg__row">
+                <div class="main__comments__final-msg__score">
+                  <label
+                    for="estimated_ps_definitive"
+                    class="main__comments__final-msg__score__text"
+                    >Personal Score:</label
+                  >
+                  <input
+                    value="-"
+                    id="estimated_ps_definitive"
+                    type="text"
+                    class="main__comments__final-msg__score__numbers"
+                  />
+                  <div class="main__comments__final-msg__score__bar-medium">
+                    <p id="ahead_of">You are ahead of 76% people</p>
+                    <span class="bar">
+                      <span class="bar__points"></span>
+                    </span>
+                  </div>
+                  <p class="main__comments__final-msg__score__profile">
+                    Elegible for basic job roles
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="main__comments__final-msg__agree">
+              <p id="h5-title">Do you agree with the results?</p>
+              <div class="radio-buttons">
+                <label class="container"
+                  >Yes
+                  <input id ="group_yes" name="group1" type="radio" value="Yes" />
+                  <span class="checkmark"></span>
+                </label>
+                <label class="container">
+                  No
+                  <input id="group_no" name="group1" type="radio" value="No" />
+                  <span class="checkmark"></span>
+                </label>
+              </div>
+            </div>
+            <div class="main__comments__final-msg__feedback">
+              <p id="h5-title">Please send feedback (Optional)</p>
+              <div id="text-area-div-first" class="opinion-area">
+                <textarea id="user-comment-first" name="review" rows="20" cols="50"> </textarea>
+              </div>
+            </div>
+            <a
+              id="replay_btn_feedback"
+              onclick="continue_playing('cover_comments_plus_final_salary')"
+              class="replay-btn"
+            >
+              see deeper analysis</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="div-cookies" style="display: none;">
+      We collect cookies to analyze our website traffic and performance; we never collect any personal data. More information in
+      <a hreflang="es" href="javascript:;" onclick="open_modal()">Cookies policy.</a>
+      <!-- <a hreflang="es" href="/info/politica-de-privacidad">Aviso Legal</a>. -->
+      <button type="button" class="btn btn-sm btn-primary acceptbtn" onclick="acceptCookies()">
+          Accept cookies
+      </button>
+      <button type="button" class="btn btn-sm btn-primary rejectbtn" onclick="rejectCookies()">
+          Reject cookies
+      </button>
+    </div>
+
+    <style>
+    
+    </style>
+    <script>
+    function checkAcceptCookies() {
+        if (localStorage.acceptCookies == 'true') {
+        } else {
+            $('#div-cookies').show();
+        }
+    }
+    function acceptCookies() {
+        localStorage.acceptCookies = 'true';
+        $('#div-cookies').hide();
+        //window['ga-disable-G-EEYEP18JCD'] = true;
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-EEYEP18JCD');
+        console.log("Accepted cookies");
+    }
+
+    function rejectCookies() {
+        localStorage.acceptCookies = 'false';
+        $('#div-cookies').hide();
+    }
+
+    $(document).ready(function() {
+        checkAcceptCookies();
+    });
+    </script>
+    <script type="text/javascript" src="js/main.js"></script>
+
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close" href="javascript:;" onclick="close_modal()">&times;</span>
+        <p><h3> Cookie Policy </h3>
+          Last updated 30/08/2021
+          
+          <h5>INTRODUCTION</h5>
+          
+          We may use cookies when you visit our website www.aida9000.com to help customize the Site and improve your experience.
+          
+          We reserve the right to make changes to this Cookie Policy at any time and for any reason. We will alert you about any changes by updating the "Last Updated" date of this Cookie Policy. Any changes or modifications will be effective immediately upon posting the updated Cookie Policy on the Site, and you waive the right to receive specific notice of each such change or modification.
+          
+          You are encouraged to periodically review this Cookie Policy to stay informed of updates. You will be deemed to have been made aware of, will be subject to, and will be deemed to have accepted the changes in any revised Cookie Policy by your continued use of the Site after the date such revised Cookie Policy is posted.
+          
+          This Cookie Policy was generated by Termly's Cookie Connda sent Manager.
+          
+          <h5>USE OF COOKIES</h5>
+          
+          A "cookie" is a string of information which assigns you a unique identifier that we store on your computer. Your browser then provides that unique identifier to use each time you submit a query to the Site. We use cookies on the Site to, among other things, record registration information, record your user preferences, keep you logged into the Site and track the services you used inside our site. Cookies help us understand how the Site is being used and improve your user experience.
+          
+          <h5>TYPES OF COOKIES</h5>
+          
+          The following types of cookies may be used when you visit the Site:
+          
+          <h6><strong>Analytics Cookies</strong></h6>
+          
+          Analytics cookies monitor how users reached the Site, and how they interact with and move around once on the Site. These cookies let us know what features on the Site are working the best and what features on the Site can be improved.
+          
+          <h6><strong>Our Cookies</strong></h6>
+          
+          Our cookies are "first-party cookies", and can be either permanent or temporary. These are necessary cookies, without which the Site won't work properly or be able to provide certain features and functionalities. Some of these may be manually disabled in your browser, but may affect the functionality of the Site.</p>
+      </div>
+
+    </div>
+  </body>
+</html>
